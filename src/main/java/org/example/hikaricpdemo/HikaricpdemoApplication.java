@@ -12,6 +12,7 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Date;
 
 @SpringBootApplication
@@ -24,7 +25,7 @@ public class HikaricpdemoApplication implements CommandLineRunner {
 	}
 
 	/**
-	 * 	注入上下文datasource
+	 * 注入上下文datasource
 	 */
 	@Autowired
 	private DataSource dataSource;
@@ -38,18 +39,31 @@ public class HikaricpdemoApplication implements CommandLineRunner {
 
 
 	@Scheduled(cron = "0/10 * * * * *")
-	public void query() throws Exception {
+	public void query() throws SQLException {
 		log.warn("query start");
-		Connection connection = dataSource.getConnection();
-		PreparedStatement preparedStatement = connection.prepareStatement(sql);
-		ResultSet resultSet = preparedStatement.executeQuery();
-		int row = 0;
-		while (resultSet.next()) {
-			Long id = resultSet.getLong("id");
-			String name = resultSet.getString("name");
-			Date birthday = resultSet.getDate("birthday");
-			Boolean active = resultSet.getBoolean("active_level");
-			log.warn("row[{}]: id:{}, name:{}, birthday:{}, active:{}", row++, id, name, birthday, active);
+		Connection connection = null;
+		PreparedStatement preparedStatement = null;
+		try {
+			connection = dataSource.getConnection();
+			preparedStatement = connection.prepareStatement(sql);
+			ResultSet resultSet = preparedStatement.executeQuery();
+			int row = 0;
+			while (resultSet.next()) {
+				Long id = resultSet.getLong("id");
+				String name = resultSet.getString("name");
+				Date birthday = resultSet.getDate("birthday");
+				Boolean active = resultSet.getBoolean("active_level");
+				log.warn("row[{}]: id:{}, name:{}, birthday:{}, active:{}", row++, id, name, birthday, active);
+			}
+		} catch (SQLException throwables) {
+			throwables.printStackTrace();
+		} finally {
+			if (preparedStatement != null) {
+				preparedStatement.close();
+			}
+			if (connection != null) {
+				connection.close();
+			}
 		}
 	}
 
