@@ -5,6 +5,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.annotation.Scheduled;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -14,6 +16,7 @@ import java.util.Date;
 
 @SpringBootApplication
 @Slf4j
+@EnableScheduling
 public class HikaricpdemoApplication implements CommandLineRunner {
 
 	public static void main(String[] args) {
@@ -30,7 +33,13 @@ public class HikaricpdemoApplication implements CommandLineRunner {
 
 	@Override
 	public void run(String... args) throws Exception {
-		log.warn("input is empty");
+		query();
+	}
+
+
+	@Scheduled(cron = "0/10 * * * * *")
+	public void query() throws Exception {
+		log.warn("query start");
 		Connection connection = dataSource.getConnection();
 		PreparedStatement preparedStatement = connection.prepareStatement(sql);
 		ResultSet resultSet = preparedStatement.executeQuery();
@@ -43,4 +52,5 @@ public class HikaricpdemoApplication implements CommandLineRunner {
 			log.warn("row[{}]: id:{}, name:{}, birthday:{}, active:{}", row++, id, name, birthday, active);
 		}
 	}
+
 }
